@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Long Running Task</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#startButton').click(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '/start_task',
+                    success: function (data) {
+                        $('#status').text('Task started...');
+                        $('#result').text('');  // Clear previous result if any
+                        checkTaskStatus();  // Start checking task status
+                    }
+                });
+            });
+
+            function checkTaskStatus() {
+                $.ajax({
+                    url: '/check_task_status',
+                    success: function (data) {
+                        if (data.status === 'completed') {
+                            $('#status').text('Task completed!');
+                            // Fetch and display the result
+                            fetchResult();
+                        } else {
+                            $('#status').text('Task still running...');
+                            setTimeout(checkTaskStatus, 1000);  // Retry after 1 second
+                        }
+                    }
+                });
+            }
+
+            function fetchResult() {
+                $.ajax({
+                    url: '/get_result',
+                    success: function (data) {
+                        if (data.result !== null && data.result !== undefined) {
+                            $('#result').text('Result: ' + data.result);
+                        } else {
+                            $('#result').text('Result not available yet.');
+                            setTimeout(fetchResult, 1000);  // Retry after 1 second
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <h1>Long Running Task Status</h1>
+    <button id="startButton">Start Task</button>
+    <p id="status"></p>
+    <p id="result"></p>
+</body>
+
+</html>
